@@ -3,17 +3,19 @@ import express from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { Chatt } from "./models/Chatt";
-
+const time = new Date().toTimeString();
 let allMassage: Chatt[] = [
   {
     userName: "Erik",
-    userColor: "red",
+    userColor: "#330088",
     chattMessage: "Jag är cool",
+    time: time,
   },
   {
     userName: "frid",
-    userColor: "blå",
+    userColor: "#225577",
     chattMessage: "Jag är snygg",
+    time: time,
   },
 ];
 
@@ -32,16 +34,12 @@ const io = new Server(server, { cors: { origin: "*" } });
 io.on("connection", (socket: Socket) => {
   console.log("a user  connected");
 
-  socket.emit(
-    "all_message",
-    allMassage.map((massage) => {
-      return {
-        userName: massage.userName,
-        userColor: massage.userColor,
-        chattMessage: massage.chattMessage,
-      };
-    })
-  );
+  socket.emit("all_massage", allMassage);
+  socket.on("new_massage", (data: Chatt) => {
+    allMassage.push(data);
+    console.log(allMassage);
+    io.emit("add_massage", allMassage);
+  });
 });
 
 server.listen(PORT, () => {
