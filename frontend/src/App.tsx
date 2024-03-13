@@ -37,6 +37,7 @@ function App() {
       chattMessage: messageText,
       time: time,
     });
+    setMassageText("");
   };
   const handleEditSubmit = (index: number) => {
     if (editMessageText.trim() === "") return;
