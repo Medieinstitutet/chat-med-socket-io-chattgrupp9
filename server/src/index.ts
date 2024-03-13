@@ -3,7 +3,6 @@ import express from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { Chatt } from "./models/Chatt";
-import path from "path";
 const time = new Date().toTimeString();
 let allMassage: Chatt[] = [
   {
