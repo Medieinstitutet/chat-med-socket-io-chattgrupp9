@@ -5,20 +5,26 @@ import { Chatt } from "./models/Chatt";
 
 function App() {
   const [socket, setSocket] = useState<Socket>();
-  const [messages, setMassages] = useState<Chatt[]>([]);
+  const [messages, setMessages] = useState<Chatt[]>([]);
   const [massageName, setMassageName] = useState("");
   const [massageColor, setMassageColor] = useState("#000000");
   const [messageText, setMassageText] = useState("");
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editMessageText, setEditMessageText] = useState("");
+
   useEffect(() => {
     if (socket) return;
 
     const s = io("http://localhost:3000");
 
     s.on("all_massage", (messages: Chatt[]) => {
-      setMassages(messages);
+      setMessages(messages);
     });
     s.on("add_massage", (message: Chatt[]) => {
-      setMassages(message);
+      setMessages(message);
+    });
+    s.on("edit_message_success", (message: Chatt[]) => {
+      setMessages(message);
     });
     setSocket(s);
   }, [setSocket, socket]);
@@ -32,9 +38,29 @@ function App() {
       time: time,
     });
   };
+  const handleEditSubmit = (index: number) => {
+    if (editMessageText.trim() === "") return;
+    const updatedMessages = [...messages];
+    updatedMessages[index].chattMessage = editMessageText;
+    setMessages(updatedMessages);
+    setEditIndex(null);
+    setEditMessageText("");
+    if (socket) {
+      socket.emit("edit_message", {
+        index: index,
+        newMessage: editMessageText,
+      });
+    }
+  };
+
   console.log(messages);
   return (
     <>
+      <select name="room">
+        <option value="Marcus">Marcus</option>
+        <option value="Erik">Erik</option>
+        <option value="Gustav">Gustav</option>
+      </select>
       <form onSubmit={oneMessage}>
         <input
           className="form-control"
@@ -73,7 +99,25 @@ function App() {
                   {msg.userName}: {msg.chattMessage}
                 </p>
                 <p className="col">{msg.time.slice(0, 8)}</p>
+                <button
+                  onClick={() => {
+                    setEditIndex(i);
+                    setEditMessageText(msg.chattMessage);
+                  }}
+                >
+                  Update
+                </button>
               </div>
+              {editIndex === i && (
+                <div className="row">
+                  <input
+                    type="text"
+                    value={editMessageText}
+                    onChange={(e) => setEditMessageText(e.target.value)}
+                  />
+                  <button onClick={() => handleEditSubmit(i)}>Save</button>
+                </div>
+              )}
             </div>
           );
         })}
