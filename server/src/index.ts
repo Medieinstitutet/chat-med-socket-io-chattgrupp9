@@ -44,7 +44,7 @@ io.on("connection", (socket: Socket) => {
     if (index >= 0 && index < allMassage.length) {
       allMassage[index].chattMessage = newMessage;
       console.log(allMassage);
-      io.emit("edit_message_success", { index, newMessage });
+      io.emit("edit_message_success", allMassage);
     }
   });
 });
