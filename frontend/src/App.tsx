@@ -2,13 +2,17 @@ import { FormEvent, useEffect, useState } from "react";
 import "./App.css";
 import { Socket, io } from "socket.io-client";
 import { Chatt } from "./models/Chatt";
+import { Room } from "./models/Room";
 
 function App() {
   const [socket, setSocket] = useState<Socket>();
   const [messages, setMessages] = useState<Chatt[]>([]);
-  const [massageName, setMassageName] = useState("");
+  const [room, setRoom] = useState<Room>();
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [massageName, setMessageName] = useState("");
+  const [messageText, setMessageText] = useState("");
+  const [selectedRoomId, setSelectedRoomId] = useState("");
   const [massageColor, setMassageColor] = useState("#000000");
-  const [messageText, setMassageText] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editMessageText, setEditMessageText] = useState("");
 
@@ -20,8 +24,8 @@ function App() {
     s.on("all_massage", (messages: Chatt[]) => {
       setMessages(messages);
     });
-    s.on("add_massage", (message: Chatt[]) => {
-      setMessages(message);
+    s.on("all_rooms", (rooms: Room[]) => {
+      setRooms(rooms);
     });
     s.on("edit_message_success", (message: Chatt[]) => {
       setMessages(message);
@@ -39,6 +43,23 @@ function App() {
     });
     setMassageText("");
   };
+  const handleClick = (selectedRoomId: string) => {
+    const selectedRoom = rooms.find((room) => room.roomId === selectedRoomId);
+    if (selectedRoom && socket) {
+      socket.emit("join_room", selectedRoomId, (room: Room) => {
+        console.log("Joined room: ", room);
+        setRoom(room);
+      });
+    }
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedRoomId = e.target.value;
+    setSelectedRoomId(selectedRoomId);
+    handleClick(selectedRoomId);
+    console.log(handleSelectChange);
+  };
+
   const handleEditSubmit = (index: number) => {
     if (editMessageText.trim() === "") return;
     const updatedMessages = [...messages];
@@ -57,49 +78,66 @@ function App() {
   console.log(messages);
   return (
     <>
-      <select name="room">
-        <option value="Marcus">Marcus</option>
-        <option value="Erik">Erik</option>
-        <option value="Gustav">Gustav</option>
+      <select name='room'>
+        <option value='Marcus'>Marcus</option>
+        <option value='Erik'>Erik</option>
+        <option value='Gustav'>Gustav</option>
       </select>
       <form onSubmit={oneMessage}>
         <input
-          className="form-control"
-          type="text"
+          className='form-control'
+          type='text'
           value={massageName}
           onChange={(e) => setMassageName(e.target.value)}
-          placeholder="Ditt namn"
+          placeholder='Ditt namn'
         />
         <br />
+        <>
+          <select value={selectedRoomId} onChange={handleSelectChange}>
+            <option value=''>Select a room</option>
+            {rooms.map((room) => (
+              <option key={room.roomId} value={room.roomId}>
+                {room.roomName}
+              </option>
+            ))}
+          </select>
+          <div>
+            <p>Du är i detta rum: {room ? room.roomName : "None"}</p>
+          </div>
+        </>
+        <textarea
+          onChange={(e) => setMessageText(e.target.value)}
+          placeholder='Chatt medelande'
+        ></textarea>
         <input
-          type="color"
+          type='color'
           value={massageColor}
           onChange={(e) => setMassageColor(e.target.value)}
         />
         <br />
         <input
-          className="form-control"
+          className='form-control'
           onChange={(e) => setMassageText(e.target.value)}
-          placeholder="Chatt medelande"
-          type="text"
+          placeholder='Chatt medelande'
+          type='text'
           value={messageText}
         ></input>
         <br />
-        <button className="btn btn-primary">Skicka</button>
+        <button className='btn btn-primary'>Skicka</button>
       </form>
       <div>
         {messages.map((msg, i) => {
           return (
             <div
-              className="container text-center"
+              className='container text-center'
               key={i}
               style={{ backgroundColor: msg.userColor, color: "white" }}
             >
-              <div className="row">
-                <p className="col">
+              <div className='row'>
+                <p className='col'>
                   {msg.userName}: {msg.chattMessage}
                 </p>
-                <p className="col">{msg.time.slice(0, 8)}</p>
+                <p className='col'>{msg.time.slice(0, 8)}</p>
                 <button
                   onClick={() => {
                     setEditIndex(i);
@@ -110,9 +148,9 @@ function App() {
                 </button>
               </div>
               {editIndex === i && (
-                <div className="row">
+                <div className='row'>
                   <input
-                    type="text"
+                    type='text'
                     value={editMessageText}
                     onChange={(e) => setEditMessageText(e.target.value)}
                   />

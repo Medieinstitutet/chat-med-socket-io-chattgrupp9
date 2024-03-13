@@ -3,6 +3,8 @@ import express from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { Chatt } from "./models/Chatt";
+import { Room } from "./models/Room";
+
 import path from "path";
 const time = new Date().toTimeString();
 let allMassage: Chatt[] = [
@@ -20,6 +22,24 @@ let allMassage: Chatt[] = [
   },
 ];
 
+let allRooms: Room[] = [
+  {
+    roomId: "1",
+    roomName: "Erik",
+    Chatts: [],
+  },
+  {
+    roomId: "2",
+    roomName: "Gustav",
+    Chatts: [],
+  },
+  {
+    roomId: "3",
+    roomName: "Marcus",
+    Chatts: [],
+  },
+];
+
 const PORT = 3000;
 const app = express();
 
@@ -32,6 +52,35 @@ app.get("/", (req, res) => {
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 io.on("connection", (socket: Socket) => {
+  console.log("a user  connected");
+
+  socket.emit("all_rooms", allRooms);
+
+  socket.emit(
+    "all_message",
+    allMassage.map((massage) => {
+      return {
+        userName: massage.userName,
+        userColor: massage.userColor,
+        chattMessage: massage.chattMessage,
+      };
+    })
+    );
+
+  socket.on("join_room", (id: string, callback) => {
+    socket.rooms.forEach((room) => {
+      console.log("Leaving room: ", room);
+      console.log(allRooms);
+      socket.leave(room);
+    });
+
+    console.log("Joining room: ", id);
+
+    socket.join(id);
+
+    callback(allRooms.find((r) => r.roomId === id));
+
+  });
   console.log("a user connected");
   socket.emit("all_massage", allMassage);
   socket.on("new_massage", (data: Chatt) => {
