@@ -40,6 +40,14 @@ io.on("connection", (socket: Socket) => {
     console.log(allMassage);
     io.emit("add_massage", allMassage);
   });
+  socket.on("edit_message", (data: { index: number; newMessage: string }) => {
+    const { index, newMessage } = data;
+    if (index >= 0 && index < allMassage.length) {
+      allMassage[index].chattMessage = newMessage;
+      console.log(allMassage);
+      io.emit("edit_message_success", { index, newMessage });
+    }
+  });
 });
 
 server.listen(PORT, () => {
