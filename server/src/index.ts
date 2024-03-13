@@ -3,6 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { Chatt } from "./models/Chatt";
+import path from "path";
 const time = new Date().toTimeString();
 let allMassage: Chatt[] = [
   {
@@ -30,10 +31,8 @@ app.get("/", (req, res) => {
 
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
-
 io.on("connection", (socket: Socket) => {
-  console.log("a user  connected");
-
+  console.log("a user connected");
   socket.emit("all_massage", allMassage);
   socket.on("new_massage", (data: Chatt) => {
     allMassage.push(data);

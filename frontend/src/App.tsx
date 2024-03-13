@@ -9,7 +9,6 @@ function App() {
   const [massageName, setMassageName] = useState("");
   const [massageColor, setMassageColor] = useState("#000000");
   const [messageText, setMassageText] = useState("");
-
   useEffect(() => {
     if (socket) return;
 
