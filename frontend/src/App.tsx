@@ -41,7 +41,7 @@ function App() {
       chattMessage: messageText,
       time: time,
     });
-    setMassageText("");
+    setMessageText("");
   };
   const handleClick = (selectedRoomId: string) => {
     const selectedRoom = rooms.find((room) => room.roomId === selectedRoomId);
@@ -88,7 +88,7 @@ function App() {
           className='form-control'
           type='text'
           value={massageName}
-          onChange={(e) => setMassageName(e.target.value)}
+          onChange={(e) => setMessageName(e.target.value)}
           placeholder='Ditt namn'
         />
         <br />
@@ -117,7 +117,7 @@ function App() {
         <br />
         <input
           className='form-control'
-          onChange={(e) => setMassageText(e.target.value)}
+          onChange={(e) => setMessageText(e.target.value)}
           placeholder='Chatt medelande'
           type='text'
           value={messageText}
