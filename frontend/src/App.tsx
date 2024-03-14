@@ -15,6 +15,7 @@ function App() {
   const [massageColor, setMassageColor] = useState("#000000");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editMessageText, setEditMessageText] = useState("");
+  const [isUsernameUnique, setIsUsernameUnique] = useState(true);
 
   useEffect(() => {
     if (socket) return;
@@ -53,6 +54,22 @@ function App() {
     }
   };
 
+  const isUsernameExists = (massageName: string) => {
+    return messages.some((msg) => msg.userName === massageName);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setMessageName(newName);
+    setIsUsernameUnique(!isUsernameExists(newName));
+  };
+  const handleNameCheck = () => {
+    if (isUsernameExists(massageName)) {
+      alert("Username already exists!");
+    } else {
+      alert("Username is unique!");
+    }
+  };
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRoomId = e.target.value;
     setSelectedRoomId(selectedRoomId);
@@ -88,12 +105,17 @@ function App() {
           className='form-control'
           type='text'
           value={massageName}
-          onChange={(e) => setMessageName(e.target.value)}
+          onChange={handleNameChange}
           placeholder='Ditt namn'
         />
         <br />
+        <button onClick={handleNameCheck}>Check Username</button>
         <>
-          <select value={selectedRoomId} onChange={handleSelectChange}>
+          <select
+            value={selectedRoomId}
+            disabled={!isUsernameUnique}
+            onChange={handleSelectChange}
+          >
             <option value=''>Select a room</option>
             {rooms.map((room) => (
               <option key={room.roomId} value={room.roomId}>
@@ -106,6 +128,7 @@ function App() {
           </div>
         </>
         <textarea
+          disabled={!isUsernameUnique}
           onChange={(e) => setMessageText(e.target.value)}
           placeholder='Chatt medelande'
         ></textarea>
@@ -116,6 +139,7 @@ function App() {
         />
         <br />
         <input
+          disabled={!isUsernameUnique}
           className='form-control'
           onChange={(e) => setMessageText(e.target.value)}
           placeholder='Chatt medelande'
@@ -123,7 +147,9 @@ function App() {
           value={messageText}
         ></input>
         <br />
-        <button className='btn btn-primary'>Skicka</button>
+        <button disabled={!isUsernameUnique} className='btn btn-primary'>
+          Skicka
+        </button>
       </form>
       <div>
         {messages.map((msg, i) => {
