@@ -95,18 +95,13 @@ function App() {
   console.log(messages);
   return (
     <>
-      <select name='room'>
-        <option value='Marcus'>Marcus</option>
-        <option value='Erik'>Erik</option>
-        <option value='Gustav'>Gustav</option>
-      </select>
       <form onSubmit={oneMessage}>
         <input
-          className='form-control'
-          type='text'
+          className="form-control"
+          type="text"
           value={massageName}
           onChange={handleNameChange}
-          placeholder='Ditt namn'
+          placeholder="Ditt namn"
         />
         <br />
         <button onClick={handleNameCheck}>Check Username</button>
@@ -116,7 +111,7 @@ function App() {
             disabled={!isUsernameUnique}
             onChange={handleSelectChange}
           >
-            <option value=''>Select a room</option>
+            <option value="">Select a room</option>
             {rooms.map((room) => (
               <option key={room.roomId} value={room.roomId}>
                 {room.roomName}
@@ -127,27 +122,22 @@ function App() {
             <p>Du är i detta rum: {room ? room.roomName : "None"}</p>
           </div>
         </>
-        <textarea
-          disabled={!isUsernameUnique}
-          onChange={(e) => setMessageText(e.target.value)}
-          placeholder='Chatt medelande'
-        ></textarea>
         <input
-          type='color'
+          type="color"
           value={massageColor}
           onChange={(e) => setMassageColor(e.target.value)}
         />
         <br />
         <input
           disabled={!isUsernameUnique}
-          className='form-control'
+          className="form-control"
           onChange={(e) => setMessageText(e.target.value)}
-          placeholder='Chatt medelande'
-          type='text'
+          placeholder="Chatt medelande"
+          type="text"
           value={messageText}
         ></input>
         <br />
-        <button disabled={!isUsernameUnique} className='btn btn-primary'>
+        <button disabled={!isUsernameUnique} className="btn btn-primary">
           Skicka
         </button>
       </form>
@@ -155,15 +145,15 @@ function App() {
         {messages.map((msg, i) => {
           return (
             <div
-              className='container text-center'
+              className="container text-center"
               key={i}
               style={{ backgroundColor: msg.userColor, color: "white" }}
             >
-              <div className='row'>
-                <p className='col'>
+              <div className="row">
+                <p className="col">
                   {msg.userName}: {msg.chattMessage}
                 </p>
-                <p className='col'>{msg.time.slice(0, 8)}</p>
+                <p className="col">{msg.time.slice(0, 8)}</p>
                 <button
                   onClick={() => {
                     setEditIndex(i);
@@ -174,9 +164,9 @@ function App() {
                 </button>
               </div>
               {editIndex === i && (
-                <div className='row'>
+                <div className="row">
                   <input
-                    type='text'
+                    type="text"
                     value={editMessageText}
                     onChange={(e) => setEditMessageText(e.target.value)}
                   />
