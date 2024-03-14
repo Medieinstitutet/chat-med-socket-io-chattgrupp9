@@ -31,7 +31,6 @@ function App() {
     s.on("edit_message_success", (message: Room) => {
       setRoom(message);
     });
-
     setSocket(s);
   }, [setSocket, socket]);
 
@@ -40,7 +39,7 @@ function App() {
     e.preventDefault();
     socket?.emit("new_massage", {
       userName: massageName,
-      chattId: room?.roomId,
+      chattID: room?.roomId,
       userColor: massageColor,
       chattMessage: messageText,
       time: time,
@@ -66,6 +65,7 @@ function App() {
     setMessageName(newName);
     setIsUsernameUnique(!isUsernameExists(newName));
   };
+
   const handleNameCheck = () => {
     if (isUsernameExists(massageName)) {
       alert("Username already exists!");
@@ -73,6 +73,7 @@ function App() {
       alert("Username is unique!");
     }
   };
+
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRoomId = e.target.value;
     setSelectedRoomId(selectedRoomId);
@@ -84,7 +85,7 @@ function App() {
     if (editMessageText.trim() === "") return;
     const updatedMessages = [...(room?.Chatts ?? [])];
     updatedMessages[index].chattMessage = editMessageText;
-    const updatedRoom = { ...room!, Chatts: updatedMessages };
+    const updatedRoom = { ...room!, allMassage: updatedMessages };
     setRoom(updatedRoom);
     setEditIndex(null);
     setEditMessageText("");
@@ -97,7 +98,7 @@ function App() {
     }
   };
 
-  console.log(rooms);
+  console.log(room?.Chatts.length);
   return (
     <>
       <input

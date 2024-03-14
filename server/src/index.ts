@@ -6,24 +6,16 @@ import { Chatt } from "./models/Chatt";
 import { Room } from "./models/Room";
 
 const time = new Date().toTimeString();
-
 let allRooms: Room[] = [
   {
     roomId: "1",
     roomName: "Erik",
     Chatts: [
       {
-        chattID: "123",
         userName: "Erik",
+        chattID: "123",
         userColor: "#330088",
         chattMessage: "Jag är cool",
-        time: time,
-      },
-      {
-        chattID: "21",
-        userName: "Lina",
-        userColor: "#330088",
-        chattMessage: "Jag är sygg",
         time: time,
       },
     ],
@@ -69,6 +61,7 @@ io.on("connection", (socket: Socket) => {
 
     callback(allRooms.find((r) => r.roomId === id));
   });
+
   socket.on("new_massage", (data: Chatt) => {
     console.log("New message: ", data);
 
@@ -82,15 +75,15 @@ io.on("connection", (socket: Socket) => {
   });
   socket.on(
     "edit_message",
-    (data: { index: number; newMessage: string; chattID: string }) => {
-      const { chattID, index, newMessage } = data;
-      const chatt = allRooms.find((r) => r.roomId === chattID);
+    (data: { index: number; newMessage: string; chattId: string }) => {
+      const { chattId, index, newMessage } = data;
+      const chatt = allRooms.find((r) => r.roomId === chattId);
       if (chatt && index >= 0 && index < chatt.Chatts.length) {
         chatt.Chatts[index].chattMessage = newMessage;
         console.log(chatt.Chatts);
-        io.to(chattID).emit(
+        io.to(chattId).emit(
           "edit_message_success",
-          allRooms.find((r) => r.roomId === chattID)
+          allRooms.find((r) => r.roomId === chattId)
         );
       }
     }
