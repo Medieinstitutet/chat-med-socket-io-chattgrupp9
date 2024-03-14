@@ -5,28 +5,28 @@ import { Server, Socket } from "socket.io";
 import { Chatt } from "./models/Chatt";
 import { Room } from "./models/Room";
 
-import path from "path";
 const time = new Date().toTimeString();
-let allMassage: Chatt[] = [
-  {
-    userName: "Erik",
-    userColor: "#330088",
-    chattMessage: "Jag är cool",
-    time: time,
-  },
-  {
-    userName: "frid",
-    userColor: "#225577",
-    chattMessage: "Jag är snygg",
-    time: time,
-  },
-];
 
 let allRooms: Room[] = [
   {
     roomId: "1",
     roomName: "Erik",
-    Chatts: [],
+    Chatts: [
+      {
+        chattID: "123",
+        userName: "Erik",
+        userColor: "#330088",
+        chattMessage: "Jag är cool",
+        time: time,
+      },
+      {
+        chattID: "21",
+        userName: "Lina",
+        userColor: "#330088",
+        chattMessage: "Jag är sygg",
+        time: time,
+      },
+    ],
   },
   {
     roomId: "2",
@@ -56,17 +56,6 @@ io.on("connection", (socket: Socket) => {
 
   socket.emit("all_rooms", allRooms);
 
-  socket.emit(
-    "all_message",
-    allMassage.map((massage) => {
-      return {
-        userName: massage.userName,
-        userColor: massage.userColor,
-        chattMessage: massage.chattMessage,
-      };
-    })
-  );
-
   socket.on("join_room", (id: string, callback) => {
     socket.rooms.forEach((room) => {
       console.log("Leaving room: ", room);
@@ -80,21 +69,32 @@ io.on("connection", (socket: Socket) => {
 
     callback(allRooms.find((r) => r.roomId === id));
   });
-  console.log("a user connected");
-  socket.emit("all_massage", allMassage);
   socket.on("new_massage", (data: Chatt) => {
-    allMassage.push(data);
-    console.log(allMassage);
-    io.emit("add_massage", allMassage);
+    console.log("New message: ", data);
+
+    const chatt = allRooms.find((r) => r.roomId === data.chattID);
+    chatt?.Chatts.push(data);
+
+    io.to(data.chattID).emit(
+      "all_massage",
+      allRooms.find((r) => r.roomId === data.chattID)
+    );
   });
-  socket.on("edit_message", (data: { index: number; newMessage: string }) => {
-    const { index, newMessage } = data;
-    if (index >= 0 && index < allMassage.length) {
-      allMassage[index].chattMessage = newMessage;
-      console.log(allMassage);
-      io.emit("edit_message_success", allMassage);
+  socket.on(
+    "edit_message",
+    (data: { index: number; newMessage: string; chattID: string }) => {
+      const { chattID, index, newMessage } = data;
+      const chatt = allRooms.find((r) => r.roomId === chattID);
+      if (chatt && index >= 0 && index < chatt.Chatts.length) {
+        chatt.Chatts[index].chattMessage = newMessage;
+        console.log(chatt.Chatts);
+        io.to(chattID).emit(
+          "edit_message_success",
+          allRooms.find((r) => r.roomId === chattID)
+        );
+      }
     }
-  });
+  );
 });
 
 server.listen(PORT, () => {

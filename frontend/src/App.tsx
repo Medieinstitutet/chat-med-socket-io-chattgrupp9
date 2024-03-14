@@ -1,12 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import "./App.css";
 import { Socket, io } from "socket.io-client";
-import { Chatt } from "./models/Chatt";
 import { Room } from "./models/Room";
 
 function App() {
   const [socket, setSocket] = useState<Socket>();
-  const [messages, setMessages] = useState<Chatt[]>([]);
   const [room, setRoom] = useState<Room>();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [massageName, setMessageName] = useState("");
@@ -22,22 +20,27 @@ function App() {
 
     const s = io("http://localhost:3000");
 
-    s.on("all_massage", (messages: Chatt[]) => {
-      setMessages(messages);
-    });
     s.on("all_rooms", (rooms: Room[]) => {
       setRooms(rooms);
     });
-    s.on("edit_message_success", (message: Chatt[]) => {
-      setMessages(message);
+
+    s.on("all_massage", (messages: Room) => {
+      setRoom(messages);
     });
+
+    s.on("edit_message_success", (message: Room) => {
+      setRoom(message);
+    });
+
     setSocket(s);
   }, [setSocket, socket]);
+
   const time = new Date().toTimeString();
   const oneMessage = (e: FormEvent) => {
     e.preventDefault();
     socket?.emit("new_massage", {
       userName: massageName,
+      chattId: room?.roomId,
       userColor: massageColor,
       chattMessage: messageText,
       time: time,
@@ -55,7 +58,7 @@ function App() {
   };
 
   const isUsernameExists = (massageName: string) => {
-    return messages.some((msg) => msg.userName === massageName);
+    return room?.Chatts.some((msg) => msg.userName === massageName);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,103 +82,110 @@ function App() {
 
   const handleEditSubmit = (index: number) => {
     if (editMessageText.trim() === "") return;
-    const updatedMessages = [...messages];
+    const updatedMessages = [...(room?.Chatts ?? [])];
     updatedMessages[index].chattMessage = editMessageText;
-    setMessages(updatedMessages);
+    const updatedRoom = { ...room!, Chatts: updatedMessages };
+    setRoom(updatedRoom);
     setEditIndex(null);
     setEditMessageText("");
     if (socket) {
       socket.emit("edit_message", {
+        chattId: room?.roomId,
         index: index,
         newMessage: editMessageText,
       });
     }
   };
 
-  console.log(messages);
+  console.log(rooms);
   return (
     <>
-      <form onSubmit={oneMessage}>
-        <input
-          className="form-control"
-          type="text"
-          value={massageName}
-          onChange={handleNameChange}
-          placeholder="Ditt namn"
-        />
-        <br />
-        <button onClick={handleNameCheck}>Check Username</button>
-        <>
-          <select
-            value={selectedRoomId}
-            disabled={!isUsernameUnique}
-            onChange={handleSelectChange}
-          >
-            <option value="">Select a room</option>
-            {rooms.map((room) => (
-              <option key={room.roomId} value={room.roomId}>
-                {room.roomName}
-              </option>
-            ))}
-          </select>
-          <div>
-            <p>Du är i detta rum: {room ? room.roomName : "None"}</p>
-          </div>
-        </>
-        <input
-          type="color"
-          value={massageColor}
-          onChange={(e) => setMassageColor(e.target.value)}
-        />
-        <br />
-        <input
+      <input
+        className="form-control"
+        type="text"
+        value={massageName}
+        onChange={handleNameChange}
+        placeholder="Ditt namn"
+      />
+      <br />
+      <button onClick={handleNameCheck}>Check Username</button>
+      <>
+        <select
+          value={selectedRoomId}
           disabled={!isUsernameUnique}
-          className="form-control"
-          onChange={(e) => setMessageText(e.target.value)}
-          placeholder="Chatt medelande"
-          type="text"
-          value={messageText}
-        ></input>
-        <br />
-        <button disabled={!isUsernameUnique} className="btn btn-primary">
-          Skicka
-        </button>
-      </form>
+          onChange={handleSelectChange}
+        >
+          <option value="">Select a room</option>
+          {rooms.map((room) => (
+            <option key={room.roomId} value={room.roomId}>
+              {room.roomName}
+            </option>
+          ))}
+        </select>
+        <div>
+          <p>Du är i detta rum: {room ? room.roomName : "None"}</p>
+        </div>
+      </>
       <div>
-        {messages.map((msg, i) => {
-          return (
-            <div
-              className="container text-center"
-              key={i}
-              style={{ backgroundColor: msg.userColor, color: "white" }}
-            >
-              <div className="row">
-                <p className="col">
-                  {msg.userName}: {msg.chattMessage}
-                </p>
-                <p className="col">{msg.time.slice(0, 8)}</p>
-                <button
-                  onClick={() => {
-                    setEditIndex(i);
-                    setEditMessageText(msg.chattMessage);
-                  }}
+        {room && (
+          <>
+            <form onSubmit={oneMessage}>
+              <input
+                className="form-control"
+                type="text"
+                value={massageName}
+                onChange={(e) => setMessageName(e.target.value)}
+                placeholder="Ditt namn"
+              />
+              <br />
+              <input
+                type="color"
+                value={massageColor}
+                onChange={(e) => setMassageColor(e.target.value)}
+              />
+              <br />
+              <input
+                className="form-control"
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Chatt medelande"
+                type="text"
+                value={messageText}
+              ></input>
+              <br />
+              <button className="btn btn-primary">Skicka</button>
+            </form>
+            <p>{room.roomName}</p>
+            <ul>
+              {room.Chatts.map((chatt, i) => (
+                <li
+                  key={i}
+                  style={{ backgroundColor: chatt.userColor, color: "white" }}
                 >
-                  Update
-                </button>
-              </div>
-              {editIndex === i && (
-                <div className="row">
-                  <input
-                    type="text"
-                    value={editMessageText}
-                    onChange={(e) => setEditMessageText(e.target.value)}
-                  />
-                  <button onClick={() => handleEditSubmit(i)}>Save</button>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                  {chatt.userName} - {chatt.chattMessage}:{" "}
+                  {chatt.time.slice(0, 9)}
+                  <button
+                    onClick={() => {
+                      setEditIndex(i);
+                      setEditMessageText(chatt.chattMessage);
+                    }}
+                  >
+                    Update
+                  </button>
+                  {editIndex === i && (
+                    <div className="row">
+                      <input
+                        type="text"
+                        value={editMessageText}
+                        onChange={(e) => setEditMessageText(e.target.value)}
+                      />
+                      <button onClick={() => handleEditSubmit(i)}>Save</button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     </>
   );
