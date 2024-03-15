@@ -13,7 +13,7 @@ function App() {
   const [massageColor, setMassageColor] = useState("#000000");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editMessageText, setEditMessageText] = useState("");
-  const [isUsernameUnique, setIsUsernameUnique] = useState(true);
+  const [isUsernameUnique, setIsUsernameUnique] = useState(false);
 
   useEffect(() => {
     if (socket) return;
@@ -31,6 +31,7 @@ function App() {
     s.on("edit_message_success", (message: Room) => {
       setRoom(message);
     });
+
     setSocket(s);
   }, [setSocket, socket]);
 
@@ -56,22 +57,29 @@ function App() {
     }
   };
 
-  const isUsernameExists = (massageName: string) => {
-    return room?.Chatts.some((msg) => msg.userName === massageName);
+  const isUsernameExists = () => {
+    socket?.emit("check_username", massageName, (isUnique: boolean) => {
+      setIsUsernameUnique(isUnique);
+
+      if (isUnique) {
+        socket?.emit("set_username", massageName);
+      } else {
+        alert("Username already exists!");
+      }
+    });
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    socket?.emit("set_username");
     const newName = e.target.value;
     setMessageName(newName);
-    setIsUsernameUnique(!isUsernameExists(newName));
+    if (newName === "") {
+      alert("Please enter your name!");
+    }
   };
 
   const handleNameCheck = () => {
-    if (isUsernameExists(massageName)) {
-      alert("Username already exists!");
-    } else {
-      alert("Username is unique!");
-    }
+    isUsernameExists();
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -100,100 +108,118 @@ function App() {
 
   return (
     <>
-      <input
-        className="form-control"
-        type="text"
-        value={massageName}
-        onChange={handleNameChange}
-        placeholder="Ditt namn"
-      />
-      <br />
-      <button onClick={handleNameCheck}>Check Use name</button>
-      <>
-        <select
-          value={selectedRoomId}
-          disabled={!isUsernameUnique}
-          onChange={handleSelectChange}
-        >
-          <option value="">Select a room</option>
-          {rooms.map((room) => (
-            <option key={room.roomId} value={room.roomId}>
-              {room.roomName}
-            </option>
-          ))}
-        </select>
-        <div>
-          <p>Du är i detta rum: {room ? room.roomName : "None"}</p>
-        </div>
-      </>
-      <div id="chatArea">
-        {room && (
-          <>
-            <form onSubmit={oneMessage}>
-              <input
-                className="form-control"
-                type="text"
-                value={massageName}
-                onChange={(e) => setMessageName(e.target.value)}
-                placeholder="Ditt namn"
-              />
-              <br />
-              <input
-                type="color"
-                value={massageColor}
-                onChange={(e) => setMassageColor(e.target.value)}
-              />
-              <br />
-              <input
-                className="form-control"
-                onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Chatt medelande"
-                type="text"
-                value={messageText}
+      <div className="App">
+        <div className="chat-window">
+          <div className="chat-header">
+            <p>Live Chat</p>
+          </div>
+          <input
+            className="form-control"
+            type="text"
+            value={massageName}
+            onChange={handleNameChange}
+            placeholder="Ditt namn"
+          />
+          <br />
+          <button onClick={handleNameCheck}>Kontrollera användarnamn</button>
+          {isUsernameUnique && (
+            <>
+              <select
+                value={selectedRoomId}
                 disabled={!isUsernameUnique}
-              ></input>
-              <br />
-              <button className="btn btn-primary">Skicka</button>
-            </form>
-            <p>{room.roomName}</p>
-            <ul className="chat-body">
-              {room.Chatts.map((chatt, i) => (
-                <div
-                  key={i}
-                  className="message"
-                  id={massageName === chatt.userName ? "you" : "other"}
-                >
-                  <li
-                    style={{ backgroundColor: chatt.userColor, color: "white" }}
-                    className="msg-list"
-                  >
-                    {chatt.userName} - {chatt.chattMessage}:{" "}
-                    {chatt.time.slice(0, 9)}
-                  </li>
-                  <button
-                    onClick={() => {
-                      setEditIndex(i);
-                      setEditMessageText(chatt.chattMessage);
-                    }}
-                    disabled={!massageName}
-                  >
-                    Update
-                  </button>
-                  {editIndex === i && (
-                    <div className="row">
+                onChange={handleSelectChange}
+              >
+                <option value="">Select a room</option>
+                {rooms.map((room) => (
+                  <option key={room.roomId} value={room.roomId}>
+                    {room.roomName}
+                  </option>
+                ))}
+              </select>
+              <div>
+                {room && (
+                  <>
+                    <form onSubmit={oneMessage}>
+                      <br />
                       <input
-                        type="text"
-                        value={editMessageText}
-                        onChange={(e) => setEditMessageText(e.target.value)}
+                        type="color"
+                        value={massageColor}
+                        onChange={(e) => setMassageColor(e.target.value)}
                       />
-                      <button onClick={() => handleEditSubmit(i)}>Save</button>
+                      <br />
+                      <input
+                        disabled={!isUsernameUnique}
+                        className="form-control"
+                        onChange={(e) => setMessageText(e.target.value)}
+                        placeholder="Chatt medelande"
+                        type="text"
+                        value={messageText}
+                      ></input>
+                      <br />
+                      <button
+                        disabled={!isUsernameUnique}
+                        className="btn btn-primary"
+                      >
+                        Skicka
+                      </button>
+                    </form>
+                    <div className="chat-body">
+                      <div className="message-container">
+                        {room.Chatts.map((chatt, i) => (
+                          <div
+                            className="message"
+                            key={i}
+                            style={{
+                              backgroundColor: chatt.userColor,
+                              color: "white",
+                            }}
+                            id={
+                              massageName === chatt.userName ? "you" : "other"
+                            }
+                          >
+                            <div>
+                              <div className="message-content">
+                                <p>{chatt.chattMessage}</p>
+                              </div>
+                              <div className="message-meta">
+                                <p id="time">{chatt.time.slice(0, 9)}</p>
+                                <p id="author">{chatt.userName}</p>
+                              </div>
+                            </div>
+                            <div className="chat-footer">
+                              <button
+                                onClick={() => {
+                                  setEditIndex(i);
+                                  setEditMessageText(chatt.chattMessage);
+                                }}
+                              >
+                                &#10002;
+                              </button>
+                              {editIndex === i && (
+                                <div className="row">
+                                  <input
+                                    type="text"
+                                    value={editMessageText}
+                                    onChange={(e) =>
+                                      setEditMessageText(e.target.value)
+                                    }
+                                  />
+                                  <button onClick={() => handleEditSubmit(i)}>
+                                    Save
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
-            </ul>
-          </>
-        )}
+                  </>
+                )}{" "}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

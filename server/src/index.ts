@@ -6,6 +6,7 @@ import { Chatt } from "./models/Chatt";
 import { Room } from "./models/Room";
 
 const time = new Date().toTimeString();
+let allUsers: { name: string }[] = [];
 let allRooms: Room[] = [
   {
     roomId: "1",
@@ -39,6 +40,18 @@ io.on("connection", (socket: Socket) => {
   console.log("a user  connected");
 
   socket.emit("all_rooms", allRooms);
+
+  socket.emit("all_users", allUsers);
+
+  socket.on("set_username", (username: string) => {
+    if (allUsers.some((user) => user.name === username)) {
+      socket.emit("username_exists", username);
+    } else {
+      allUsers.push({ name: username });
+      socket.emit("username_unique", username);
+    }
+    console.log("all users", allUsers);
+  });
 
   socket.on("join_room", (id: string, callback) => {
     socket.rooms.forEach((room) => {
@@ -80,6 +93,11 @@ io.on("connection", (socket: Socket) => {
       }
     }
   );
+
+  socket.on("check_username", (username: string, callback) => {
+    if (allUsers.find((name) => name.name === username)) callback(false);
+    else return callback(true);
+  });
 });
 
 server.listen(PORT, () => {
