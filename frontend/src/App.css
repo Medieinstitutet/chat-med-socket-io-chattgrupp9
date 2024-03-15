@@ -1,10 +1,15 @@
-body{
+body {
   background-color: rgb(31, 41, 49);
+  color: rgb(255, 255, 255);
+  width: auto;
+  height: auto;
+
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
+  height: auto;
+  margin: 0;
   padding: 2rem;
   text-align: center;
 }
@@ -17,3 +22,35 @@ select {
   margin-top: 10px;
 }
 
+#chatArea {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+}
+
+.chat-body {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+}
+
+.message {
+  display: flex;
+  width: auto;
+  height: auto;
+}
+
+.chat-body #you {
+  justify-content: flex-start;
+  width: auto;
+}
+
+.chat-body #other {
+  justify-content: flex-end;
+  width: auto;
+}
+
+.msg-list {
+  list-style: none;
+}

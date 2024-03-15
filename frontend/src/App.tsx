@@ -98,7 +98,6 @@ function App() {
     }
   };
 
-  console.log(room?.Chatts.length);
   return (
     <>
       <input
@@ -109,7 +108,7 @@ function App() {
         placeholder="Ditt namn"
       />
       <br />
-      <button onClick={handleNameCheck}>Check Username</button>
+      <button onClick={handleNameCheck}>Check Use name</button>
       <>
         <select
           value={selectedRoomId}
@@ -127,7 +126,7 @@ function App() {
           <p>Du är i detta rum: {room ? room.roomName : "None"}</p>
         </div>
       </>
-      <div>
+      <div id="chatArea">
         {room && (
           <>
             <form onSubmit={oneMessage}>
@@ -151,24 +150,32 @@ function App() {
                 placeholder="Chatt medelande"
                 type="text"
                 value={messageText}
+                disabled={!isUsernameUnique}
               ></input>
               <br />
               <button className="btn btn-primary">Skicka</button>
             </form>
             <p>{room.roomName}</p>
-            <ul>
+            <ul className="chat-body">
               {room.Chatts.map((chatt, i) => (
-                <li
+                <div
                   key={i}
-                  style={{ backgroundColor: chatt.userColor, color: "white" }}
+                  className="message"
+                  id={massageName === chatt.userName ? "you" : "other"}
                 >
-                  {chatt.userName} - {chatt.chattMessage}:{" "}
-                  {chatt.time.slice(0, 9)}
+                  <li
+                    style={{ backgroundColor: chatt.userColor, color: "white" }}
+                    className="msg-list"
+                  >
+                    {chatt.userName} - {chatt.chattMessage}:{" "}
+                    {chatt.time.slice(0, 9)}
+                  </li>
                   <button
                     onClick={() => {
                       setEditIndex(i);
                       setEditMessageText(chatt.chattMessage);
                     }}
+                    disabled={!massageName}
                   >
                     Update
                   </button>
@@ -182,7 +189,7 @@ function App() {
                       <button onClick={() => handleEditSubmit(i)}>Save</button>
                     </div>
                   )}
-                </li>
+                </div>
               ))}
             </ul>
           </>
