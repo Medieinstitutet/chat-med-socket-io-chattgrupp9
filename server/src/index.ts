@@ -10,15 +10,7 @@ let allRooms: Room[] = [
   {
     roomId: "1",
     roomName: "Erik",
-    Chatts: [
-      {
-        userName: "Erik",
-        chattID: "123",
-        userColor: "#330088",
-        chattMessage: "Jag är cool",
-        time: time,
-      },
-    ],
+    Chatts: [],
   },
   {
     roomId: "2",
